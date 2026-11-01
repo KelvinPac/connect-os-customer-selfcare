@@ -1,0 +1,24 @@
+{
+  "name": "connectos-customer-portal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ConnectOS customer self-service portal (Vue 3)",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lucide-vue-next": "^1.0.0",
+    "pinia": "^4.1.0",
+    "vue": "^3.5.44",
+    "vue-router": "^5.4.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-vue": "^6.0.10",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.3.5"
+  }
+}
