@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onUnmounted, ref, watch } from 'vue'
-import { CheckCircle2, Smartphone, XCircle, Landmark } from 'lucide-vue-next'
+import { CheckCircle2, Copy, Smartphone, XCircle, Landmark } from 'lucide-vue-next'
 import Modal from './Modal.vue'
 import Field from './Field.vue'
 import Spinner from './Spinner.vue'
@@ -9,7 +9,7 @@ import { useAuth } from '@/stores/auth'
 import { useAccount } from '@/stores/account'
 import { money, normalizeKePhone } from '@/utils/format'
 
-const props = defineProps({ open: Boolean, suggested: { type: Number, default: 0 } })
+const props = defineProps({ open: Boolean, suggested: { type: Number, default: 0 }, mode: { type: String, default: 'stk' } })
 const emit = defineEmits(['close', 'done'])
 
 const auth = useAuth()
@@ -17,6 +17,10 @@ const account = useAccount()
 
 const phone = ref('')
 const amount = ref('')
+const tab = ref('stk') // stk | paybill
+const startBalance = ref(0)
+const checking = ref(false)
+const copied = ref('')
 const step = ref('form') // form | sending | waiting | success | failed | timeout
 const error = ref('')
 const payment = ref(null)
@@ -35,6 +39,8 @@ const amountNum = computed(() => Number(amount.value))
 watch(() => props.open, (o) => {
   if (!o) return stopPolling()
   step.value = 'form'
+  tab.value = props.mode === 'paybill' ? 'paybill' : 'stk'
+  startBalance.value = account.balance
   error.value = ''
   fieldErrors.value = {}
   payment.value = null
@@ -42,6 +48,21 @@ watch(() => props.open, (o) => {
   amount.value = props.suggested > 0 ? String(Math.ceil(props.suggested)) : ''
 })
 onUnmounted(stopPolling)
+
+async function copy(text, key) {
+  try { await navigator.clipboard.writeText(String(text)); copied.value = key; setTimeout(() => (copied.value = ''), 1500) } catch { /* ignore */ }
+}
+
+// Paybill payments land via Safaricom's C2B webhook with no payment row to poll, so re-read the wallet.
+async function checkPaybill() {
+  checking.value = true
+  error.value = ''
+  try {
+    await account.refresh()
+    if (account.balance > startBalance.value) { step.value = 'success'; emit('done') }
+    else error.value = 'We haven\'t received your payment yet. It can take a minute — try again shortly.'
+  } catch (e) { error.value = e.message } finally { checking.value = false }
+}
 
 function stopPolling() { stopped = true; clearTimeout(timer) }
 
@@ -101,29 +122,45 @@ const closeable = computed(() => step.value !== 'sending')
 </script>
 
 <template>
-  <Modal :open="open" title="Top up wallet" :subtitle="step === 'form' ? 'Pay with M-Pesa — you\'ll get a prompt on your phone.' : ''" :persistent="step === 'sending'" @close="closeable && emit('close')">
+  <Modal :open="open" title="Top up wallet" :subtitle="step === 'form' ? (tab === 'stk' ? 'Pay with M-Pesa — you\'ll get a prompt on your phone.' : 'Pay from your M-Pesa menu using our Paybill.') : ''" :persistent="step === 'sending'" @close="closeable && emit('close')">
     <!-- form -->
-    <form v-if="step === 'form' || step === 'sending'" class="space-y-5" @submit.prevent="submit">
+    <form v-if="step === 'form' || step === 'sending'" class="space-y-5" @submit.prevent="tab === 'stk' ? submit() : checkPaybill()">
+      <div class="grid grid-cols-2 rounded-xl bg-surface-2 p-1 text-sm font-medium" role="tablist">
+        <button type="button" role="tab" :aria-selected="tab === 'stk'" :class="['flex items-center justify-center gap-2 rounded-lg py-2 transition', tab === 'stk' ? 'bg-surface text-ink shadow-sm' : 'text-ink-3']" @click="tab = 'stk'; error = ''"><Smartphone class="size-4" />M-Pesa prompt</button>
+        <button type="button" role="tab" :aria-selected="tab === 'paybill'" :class="['flex items-center justify-center gap-2 rounded-lg py-2 transition', tab === 'paybill' ? 'bg-surface text-ink shadow-sm' : 'text-ink-3']" @click="tab = 'paybill'; error = ''"><Landmark class="size-4" />Paybill</button>
+      </div>
+
       <p v-if="error" class="rounded-xl bg-bad-soft px-3.5 py-3 text-sm text-bad">{{ error }}</p>
 
-      <Field label="M-Pesa number" for="tu-phone" :error="fieldErrors.phone">
+      <Field v-if="tab === 'stk'" label="M-Pesa number" for="tu-phone" :error="fieldErrors.phone">
         <input id="tu-phone" v-model="phone" class="input" inputmode="tel" autocomplete="tel" placeholder="0712 345 678" />
       </Field>
 
-      <Field label="Amount (KES)" for="tu-amount" :error="fieldErrors.amount" :hint="suggested > 0 ? `Covers the ${money(suggested)} you need for renewal.` : ''">
+      <Field v-if="tab === 'stk'" label="Amount (KES)" for="tu-amount" :error="fieldErrors.amount" :hint="suggested > 0 ? `Covers the ${money(suggested)} you need for renewal.` : ''">
         <input id="tu-amount" v-model="amount" class="input text-lg font-semibold" inputmode="numeric" placeholder="1000" />
         <div class="mt-2.5 flex flex-wrap gap-2">
           <button v-for="q in quick" :key="q" type="button" class="btn-secondary btn-sm" @click="amount = String(q)">{{ q.toLocaleString() }}</button>
         </div>
       </Field>
 
-      <details v-if="account.customer" class="rounded-xl border border-line px-4 py-3 text-sm">
-        <summary class="flex cursor-pointer items-center gap-2 font-medium text-ink-2"><Landmark class="size-4" />Prefer to use the M-Pesa menu?</summary>
-        <p class="mt-3 text-ink-2">
-          Go to <b class="text-ink">Lipa na M-Pesa → Pay Bill</b><template v-if="paybill"> and enter business number <b class="font-mono text-ink">{{ paybill }}</b></template>.
-          Use <b class="font-mono text-ink">{{ account.customer.customerNumber }}</b> as the account number. Your wallet is credited automatically.
-        </p>
-      </details>
+      <div v-else class="space-y-4">
+        <ol class="space-y-1 text-sm text-ink-2">
+          <li>1. Open <b class="text-ink">M-Pesa → Lipa na M-Pesa → Pay Bill</b>.</li>
+          <li>2. Enter the business and account numbers below.</li>
+          <li>3. Enter <b class="text-ink">{{ suggested > 0 ? money(Math.ceil(suggested)) : 'any amount' }}</b><template v-if="suggested > 0"> (or more)</template> and your PIN.</li>
+        </ol>
+        <dl class="divide-y divide-line rounded-xl border border-line text-sm">
+          <div class="flex items-center justify-between gap-3 px-4 py-3">
+            <div><dt class="text-xs text-ink-3">Business number</dt><dd class="font-mono text-base font-semibold">{{ paybill || '—' }}</dd></div>
+            <button v-if="paybill" type="button" class="btn-ghost btn-sm" @click="copy(paybill, 'pb')"><Copy class="size-4" />{{ copied === 'pb' ? 'Copied' : 'Copy' }}</button>
+          </div>
+          <div class="flex items-center justify-between gap-3 px-4 py-3">
+            <div><dt class="text-xs text-ink-3">Account number</dt><dd class="font-mono text-base font-semibold">{{ account.customer?.customerNumber || '—' }}</dd></div>
+            <button v-if="account.customer?.customerNumber" type="button" class="btn-ghost btn-sm" @click="copy(account.customer.customerNumber, 'ac')"><Copy class="size-4" />{{ copied === 'ac' ? 'Copied' : 'Copy' }}</button>
+          </div>
+        </dl>
+        <p class="text-xs text-ink-3">Your wallet is credited automatically once Safaricom confirms the payment. Then tap “I've paid” to check.</p>
+      </div>
     </form>
 
     <!-- waiting -->
@@ -158,7 +195,8 @@ const closeable = computed(() => step.value !== 'sending')
     <template #footer>
       <template v-if="step === 'form' || step === 'sending'">
         <button class="btn-secondary" :disabled="step === 'sending'" @click="emit('close')">Cancel</button>
-        <button class="btn-primary" :disabled="step === 'sending'" @click="submit">
+        <button v-if="tab === 'paybill'" class="btn-primary" :disabled="checking" @click="checkPaybill"><Spinner v-if="checking" />{{ checking ? 'Checking…' : 'I\'ve paid — check balance' }}</button>
+        <button v-else class="btn-primary" :disabled="step === 'sending'" @click="submit">
           <Spinner v-if="step === 'sending'" />{{ step === 'sending' ? 'Sending prompt…' : 'Send M-Pesa prompt' }}
         </button>
       </template>

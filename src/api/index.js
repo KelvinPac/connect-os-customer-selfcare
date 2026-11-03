@@ -45,6 +45,8 @@ export const subscriptionApi = {
   get: (id) => http.get(`/subscriptions/${id}`),
   preview: (id) => http.get(`/subscriptions/${id}/preview`),
   renew: (id) => http.post(`/subscriptions/${id}/renew`),
+  changePlanPreview: (id, planId) => http.get(`/subscriptions/${id}/change-plan/preview`, { planId }),
+  changePlan: (id, planId) => http.post(`/subscriptions/${id}/change-plan`, { planId }),
 }
 
 export const paymentApi = {

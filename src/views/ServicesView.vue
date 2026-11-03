@@ -6,6 +6,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import FupCard from '@/components/FupCard.vue'
 import RenewModal from '@/components/RenewModal.vue'
+import ChangePlanModal from '@/components/ChangePlanModal.vue'
 import NewTicketModal from '@/components/NewTicketModal.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ErrorState from '@/components/ErrorState.vue'
@@ -26,6 +27,7 @@ const plansError = ref('')
 const segment = ref('')
 const renewSub = ref(null)
 const ticketPreset = ref(null)
+const changeTarget = ref(null)
 const showPass = ref(false)
 const copied = ref('')
 onMounted(async () => {
@@ -50,9 +52,12 @@ async function copy(text, key) {
   try { await navigator.clipboard.writeText(text); copied.value = key; setTimeout(() => (copied.value = ''), 1500) } catch { ui.error('Could not copy to clipboard.') }
 }
 
-// POST /subscriptions/:id/change-plan is not implemented server-side, so a plan change is an
-// UPGRADE_DOWNGRADE ticket the support team actions.
+// An ACTIVE subscription can switch instantly (prorated, paid from the wallet). Anything else
+// (grace period, expired, nothing yet) the API rejects with 409, so fall back to a support ticket.
+const activeSub = computed(() => subs.value.find((s) => s.status === 'ACTIVE'))
+const changeSub = ref(null)
 function requestPlan(p) {
+  if (activeSub.value) { changeSub.value = activeSub.value; changeTarget.value = p; return }
   const cur = subs.value.find((s) => ['ACTIVE', 'GRACE_PERIOD'].includes(s.status))
   ticketPreset.value = {
     category: 'UPGRADE_DOWNGRADE',
@@ -134,7 +139,7 @@ function requestPlan(p) {
     <!-- Plans -->
     <section>
       <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <div><h2 class="text-lg font-semibold">Available plans</h2><p class="text-sm text-ink-2">Want something faster or cheaper? Request a switch and our team will handle it.</p></div>
+        <div><h2 class="text-lg font-semibold">Available plans</h2><p class="text-sm text-ink-2">Want something faster or cheaper? Switch any time — we credit the unused time on your current plan.</p></div>
         <div v-if="segments.length > 1" class="flex rounded-xl bg-surface-2 p-1 text-sm">
           <button :class="['rounded-lg px-3 py-1.5 font-medium', !segment ? 'bg-surface shadow-sm' : 'text-ink-3']" @click="segment = ''">All</button>
           <button v-for="g in segments" :key="g" :class="['rounded-lg px-3 py-1.5 font-medium', segment === g ? 'bg-surface shadow-sm' : 'text-ink-3']" @click="segment = g">{{ titleCase(g) }}</button>
@@ -156,7 +161,7 @@ function requestPlan(p) {
             <li class="flex items-center gap-2"><Check class="size-4 text-ok" />{{ planTypeLabel(p.type) }} connection</li>
             <li v-if="Number(p.setupFee) > 0" class="flex items-center gap-2"><Check class="size-4 text-ok" />{{ money(p.setupFee, p.currency) }} one-time setup</li>
           </ul>
-          <button class="btn-secondary mt-5 w-full" :disabled="currentPlanIds.has(p.id)" @click="requestPlan(p)">{{ currentPlanIds.has(p.id) ? 'Current plan' : 'Request this plan' }}</button>
+          <button class="btn-secondary mt-5 w-full" :disabled="currentPlanIds.has(p.id)" @click="requestPlan(p)">{{ currentPlanIds.has(p.id) ? 'Current plan' : activeSub ? 'Switch to this plan' : 'Request this plan' }}</button>
         </article>
       </div>
     </section>
@@ -172,5 +177,6 @@ function requestPlan(p) {
   </div>
 
   <RenewModal :open="!!renewSub" :subscription="renewSub" @close="renewSub = null" @topup="(n) => { renewSub = null; emit('topup', n) }" />
+  <ChangePlanModal :open="!!changeTarget" :subscription="changeSub" :plan="changeTarget" @close="changeTarget = null" @topup="(n, m) => emit('topup', n, m)" />
   <NewTicketModal :open="!!ticketPreset" :preset="ticketPreset" @close="ticketPreset = null" @created="(t) => router.push(`/support/${t.id}`)" />
 </template>

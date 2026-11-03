@@ -35,7 +35,8 @@ const isActive = (n) => (n.name === 'dashboard' ? route.name === 'dashboard' : S
 
 const topUp = ref(false)
 const suggested = ref(0)
-const openTopUp = (amount = 0) => { suggested.value = Number(amount) || 0; topUp.value = true }
+const topUpMode = ref('stk')
+const openTopUp = (amount = 0, mode = 'stk') => { suggested.value = Number(amount) || 0; topUpMode.value = mode === 'paybill' ? 'paybill' : 'stk'; topUp.value = true }
 const menu = ref(false)
 const themes = [
   { v: 'light', icon: Sun, label: 'Light' },
@@ -130,7 +131,7 @@ const customerNumber = computed(() => account.customer?.customerNumber ?? auth.u
       </div>
     </nav>
 
-    <TopUpModal :open="topUp" :suggested="suggested" @close="topUp = false" />
+    <TopUpModal :open="topUp" :suggested="suggested" :mode="topUpMode" @close="topUp = false" />
     <InstallPrompt />
   </div>
 </template>
