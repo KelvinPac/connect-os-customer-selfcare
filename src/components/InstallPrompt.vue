@@ -2,10 +2,11 @@
 import { ref } from 'vue'
 import { Download, Share, X } from 'lucide-vue-next'
 import { usePwa } from '@/stores/pwa'
+import { useBranding } from '@/stores/branding'
 
 const pwa = usePwa()
 const showSteps = ref(false)
-const appName = import.meta.env.VITE_APP_NAME || 'ConnectOS'
+const branding = useBranding()
 </script>
 
 <template>
@@ -13,7 +14,7 @@ const appName = import.meta.env.VITE_APP_NAME || 'ConnectOS'
     <aside v-if="pwa.visible" class="card fixed inset-x-3 bottom-20 z-40 mx-auto flex max-w-md items-start gap-3 p-4 shadow-lg lg:bottom-6 lg:left-auto lg:right-6 lg:mx-0" role="dialog" aria-label="Install app">
       <img src="/icon-any-192.png" class="size-11 shrink-0 rounded-xl" alt="" />
       <div class="min-w-0 flex-1">
-        <p class="text-sm font-semibold">Install {{ appName }}</p>
+        <p class="text-sm font-semibold">Install {{ branding.appName }}</p>
         <p v-if="!showSteps" class="mt-0.5 text-xs text-ink-2">Get one-tap access from your home screen, like any other app.</p>
         <p v-else class="mt-0.5 text-xs text-ink-2">Tap <Share class="inline size-3.5 align-text-bottom" /> <b>Share</b> in Safari, then choose <b>Add to Home Screen</b>.</p>
         <div class="mt-3 flex gap-2">

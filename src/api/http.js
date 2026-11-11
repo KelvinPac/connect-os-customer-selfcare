@@ -5,6 +5,9 @@
 
 const BASE = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')
 const KEY = 'cos.tokens'
+// Origin of the API without its /api/vN suffix: the public /company/* endpoints live
+// outside /api/v1. '' (same origin) when the base is the relative /api/v1.
+export const API_ROOT = BASE.replace(/\/api\/v\d+$/, '')
 
 export class ApiError extends Error {
   constructor(message, status, errors = []) {

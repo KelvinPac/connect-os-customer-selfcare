@@ -5,6 +5,7 @@ import {
   LayoutDashboard, Wifi, Router, Wallet, Receipt, Activity, LifeBuoy, UserRound, LogOut, Sun, Moon, MonitorSmartphone, Plus,
 } from 'lucide-vue-next'
 import { useAuth } from '@/stores/auth'
+import { useBranding } from '@/stores/branding'
 import { useAccount } from '@/stores/account'
 import { useOnu } from '@/stores/onu'
 import { useUi } from '@/stores/ui'
@@ -52,7 +53,7 @@ async function signOut() {
   useOnu().reset()
   router.replace({ name: 'login' })
 }
-const appName = import.meta.env.VITE_APP_NAME || 'ConnectOS'
+const branding = useBranding()
 const customerNumber = computed(() => account.customer?.customerNumber ?? auth.user?.customer?.customerNumber)
 </script>
 
@@ -61,8 +62,8 @@ const customerNumber = computed(() => account.customer?.customerNumber ?? auth.u
     <!-- Sidebar (desktop) -->
     <aside class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-surface lg:flex">
       <div class="flex h-16 items-center gap-3 px-6">
-        <img src="/favicon.svg" class="size-8" alt="" />
-        <div class="leading-tight"><p class="text-sm font-bold text-ink">{{ appName }}</p><p class="text-[11px] text-ink-3">Customer portal</p></div>
+        <img :src="branding.logoSrc" class="size-8 object-contain" alt="" @error="branding.logoBroken = true" />
+        <div class="leading-tight"><p class="text-sm font-bold text-ink">{{ branding.appName }}</p><p class="text-[11px] text-ink-3">Customer portal</p></div>
       </div>
       <nav class="flex-1 space-y-1 px-3 py-4" aria-label="Main">
         <RouterLink
@@ -92,7 +93,7 @@ const customerNumber = computed(() => account.customer?.customerNumber ?? auth.u
     <!-- Top bar -->
     <header class="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 border-b border-line bg-bg/80 px-4 backdrop-blur-xl sm:px-6 lg:px-10">
       <div class="flex items-center gap-2.5 lg:hidden">
-        <img src="/favicon.svg" class="size-8" alt="" /><span class="text-sm font-bold">{{ appName }}</span>
+        <img :src="branding.logoSrc" class="size-8 object-contain" alt="" @error="branding.logoBroken = true" /><span class="text-sm font-bold">{{ branding.appName }}</span>
       </div>
       <p class="hidden text-sm text-ink-2 lg:block">Hi <b class="text-ink">{{ auth.firstName }}</b> 👋</p>
       <div class="flex items-center gap-2">

@@ -8,14 +8,16 @@ import { fileURLToPath, URL } from 'node:url'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const target = env.VITE_API_PROXY_TARGET || 'http://localhost:5008'
+  const proxy = { '/api': { target, changeOrigin: true }, '/company': { target, changeOrigin: true } }
   return {
     plugins: [vue(), tailwindcss()],
     resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
+    // /company/* are the API's public name + logo endpoints; they live outside /api/v1.
     server: {
       port: 3000,
       strictPort: true,
-      proxy: { '/api': { target, changeOrigin: true } },
+      proxy: proxy,
     },
-    preview: { port: 3000, proxy: { '/api': { target, changeOrigin: true } } },
+    preview: { port: 3000, proxy: proxy },
   }
 })

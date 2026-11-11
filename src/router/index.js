@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuth } from '@/stores/auth'
+import { useBranding } from '@/stores/branding'
 
 const routes = [
   { path: '/login', name: 'login', component: () => import('@/views/LoginView.vue'), meta: { guest: true, title: 'Sign in' } },
@@ -37,6 +38,7 @@ router.beforeEach(async (to) => {
   if (to.meta.guest && auth.isAuthed && to.name !== 'reset') return { name: 'dashboard' }
 })
 
-router.afterEach((to) => {
-  document.title = `${to.meta.title ? `${to.meta.title} · ` : ''}${import.meta.env.VITE_APP_NAME || 'ConnectOS'} Portal`
-})
+export function updateTitle(to = router.currentRoute.value) {
+  document.title = `${to.meta.title ? `${to.meta.title} · ` : ''}${useBranding().appName} Portal`
+}
+router.afterEach((to) => updateTitle(to))

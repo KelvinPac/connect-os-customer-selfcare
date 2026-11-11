@@ -1,8 +1,9 @@
 <script setup>
 import { Zap, ShieldCheck, Headset, Router, Wifi } from 'lucide-vue-next'
 import NetworkBackground from '@/components/NetworkBackground.vue'
+import { useBranding } from '@/stores/branding'
 defineProps({ title: String, subtitle: String })
-const appName = import.meta.env.VITE_APP_NAME || 'ConnectOS'
+const branding = useBranding()
 const points = [
   { icon: Router, text: 'Check your router’s status and signal strength' },
   { icon: Wifi, text: 'Change your Wi-Fi name and password yourself' },
@@ -17,14 +18,14 @@ const points = [
     <!-- Mobile hero: brand + tagline over a cropped globe -->
     <header class="relative h-36 overflow-hidden px-5 pt-6 text-white lg:hidden" style="background: linear-gradient(145deg, #3730a3 0%, #5b21b6 55%, #7c3aed 100%)">
       <NetworkBackground compact />
-      <div class="relative flex items-center gap-2.5"><img src="/favicon.svg" class="size-8 rounded-lg ring-1 ring-white/30" alt="" /><span class="font-bold">{{ appName }}</span></div>
+      <div class="relative flex items-center gap-2.5"><img :src="branding.logoSrc" class="size-8 rounded-lg object-contain ring-1 ring-white/30" alt="" @error="branding.logoBroken = true" /><span class="font-bold">{{ branding.appName }}</span></div>
       <p class="relative mt-5 max-w-[14rem] text-xl font-bold leading-tight tracking-tight">Your internet, in your hands.</p>
     </header>
     <aside class="relative hidden overflow-hidden p-12 text-white lg:flex lg:flex-col lg:justify-between" style="background: linear-gradient(145deg, #3730a3 0%, #5b21b6 55%, #7c3aed 100%)">
       <div class="pointer-events-none absolute -right-24 -top-24 size-96 rounded-full bg-white/10 blur-3xl" />
       <div class="pointer-events-none absolute -bottom-32 -left-16 size-96 rounded-full bg-fuchsia-400/20 blur-3xl" />
       <NetworkBackground />
-      <div class="relative flex items-center gap-3"><img src="/favicon.svg" class="size-10 rounded-xl ring-1 ring-white/30" alt="" /><span class="text-lg font-bold">{{ appName }}</span></div>
+      <div class="relative flex items-center gap-3"><img :src="branding.logoSrc" class="size-10 rounded-xl object-contain ring-1 ring-white/30" alt="" @error="branding.logoBroken = true" /><span class="text-lg font-bold">{{ branding.appName }}</span></div>
       <div class="relative max-w-md">
         <h2 class="text-4xl font-bold leading-tight tracking-tight">Your internet, in your hands.</h2>
         <p class="mt-3 text-white/75">Manage your plan, wallet, router and support requests — all in one place.</p>
@@ -34,7 +35,7 @@ const points = [
           </li>
         </ul>
       </div>
-      <p class="relative text-xs text-white/50">© {{ new Date().getFullYear() }} {{ appName }}</p>
+      <p class="relative text-xs text-white/50">© {{ new Date().getFullYear() }} {{ branding.appName }}</p>
     </aside>
 
     <main class="relative flex items-start justify-center px-5 py-8 lg:items-center lg:py-10">
