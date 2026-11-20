@@ -122,7 +122,7 @@ const closeable = computed(() => step.value !== 'sending')
 </script>
 
 <template>
-  <Modal :open="open" title="Top up wallet" :subtitle="step === 'form' ? (tab === 'stk' ? 'Pay with M-Pesa — you\'ll get a prompt on your phone.' : 'Pay from your M-Pesa menu using our Paybill.') : ''" :persistent="step === 'sending'" @close="closeable && emit('close')">
+  <Modal :open="open" elevated title="Top up wallet" :subtitle="step === 'form' ? (tab === 'stk' ? 'Pay with M-Pesa — you\'ll get a prompt on your phone.' : 'Pay from your M-Pesa menu using our Paybill.') : ''" :persistent="step === 'sending'" @close="closeable && emit('close')">
     <!-- form -->
     <form v-if="step === 'form' || step === 'sending'" class="space-y-5" @submit.prevent="tab === 'stk' ? submit() : checkPaybill()">
       <div class="grid grid-cols-2 rounded-xl bg-surface-2 p-1 text-sm font-medium" role="tablist">

@@ -2,7 +2,7 @@
 import { onMounted, onUnmounted, watch } from 'vue'
 import { X } from 'lucide-vue-next'
 
-const props = defineProps({ open: Boolean, title: String, subtitle: String, wide: Boolean, persistent: Boolean })
+const props = defineProps({ open: Boolean, title: String, subtitle: String, wide: Boolean, persistent: Boolean, elevated: Boolean })
 const emit = defineEmits(['close'])
 
 const onKey = (e) => { if (e.key === 'Escape' && props.open && !props.persistent) emit('close') }
@@ -14,7 +14,7 @@ watch(() => props.open, (o) => { document.body.style.overflow = o ? 'hidden' : '
 <template>
   <Teleport to="body">
     <Transition name="pop">
-      <div v-if="open" class="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4" role="dialog" aria-modal="true" :aria-label="title">
+      <div v-if="open" :class="[elevated ? 'z-[60]' : 'z-50']" class="fixed inset-0 flex items-end justify-center sm:items-center sm:p-4" role="dialog" aria-modal="true" :aria-label="title">
         <div class="absolute inset-0 bg-slate-950/50 backdrop-blur-[2px]" @click="!persistent && emit('close')" />
         <div :class="['sheet card relative flex max-h-[92dvh] w-full flex-col rounded-b-none sm:rounded-b-2xl', wide ? 'sm:max-w-2xl' : 'sm:max-w-md']">
           <header class="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
