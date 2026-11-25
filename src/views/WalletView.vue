@@ -44,6 +44,7 @@ const kind = {
   TRANSFER_IN: { icon: ArrowDownLeft, cls: 'bg-ok-soft text-ok', sign: '+' },
   TRANSFER_OUT: { icon: ArrowUpRight, cls: 'bg-surface-2 text-ink-2', sign: '−' },
   REVERSAL: { icon: RotateCcw, cls: 'bg-surface-2 text-ink-2', sign: '−' },
+  REVERSAL_UNDO: { icon: ArrowDownLeft, cls: 'bg-ok-soft text-ok', sign: '+' },
 }
 const describe = (t) => t.description || (t.payment ? `${methodLabel(t.payment.method)} top-up` : titleCase(t.type))
 const reference = (t) => t.payment?.mpesaReceiptNo || t.payment?.paymentNumber || t.payment?.bankReference || ''

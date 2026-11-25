@@ -12,7 +12,7 @@ const TONES = {
   // tickets
   OPEN: 'info', IN_PROGRESS: 'brand', WAITING_CUSTOMER: 'warn', WAITING_THIRD_PARTY: 'warn', RESOLVED: 'ok', CLOSED: 'muted',
   // wallet
-  TOPUP: 'ok', PAYMENT: 'muted', REFUND: 'info', ADJUSTMENT: 'info', TRANSFER_IN: 'ok', TRANSFER_OUT: 'muted', REVERSAL: 'muted',
+  TOPUP: 'ok', PAYMENT: 'muted', REFUND: 'info', ADJUSTMENT: 'info', TRANSFER_IN: 'ok', TRANSFER_OUT: 'muted', REVERSAL: 'muted', REVERSAL_UNDO: 'ok',
 }
 const CLS = {
   ok: 'bg-ok-soft text-ok', warn: 'bg-warn-soft text-warn', bad: 'bg-bad-soft text-bad',
