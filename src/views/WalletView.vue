@@ -40,6 +40,10 @@ const kind = {
   PAYMENT: { icon: ArrowUpRight, cls: 'bg-surface-2 text-ink-2', sign: '−' },
   REFUND: { icon: RotateCcw, cls: 'bg-info-soft text-info', sign: '+' },
   ADJUSTMENT: { icon: SlidersHorizontal, cls: 'bg-info-soft text-info', sign: '' },
+  // A payment moved between accounts (made to the wrong account number)
+  TRANSFER_IN: { icon: ArrowDownLeft, cls: 'bg-ok-soft text-ok', sign: '+' },
+  TRANSFER_OUT: { icon: ArrowUpRight, cls: 'bg-surface-2 text-ink-2', sign: '−' },
+  REVERSAL: { icon: RotateCcw, cls: 'bg-surface-2 text-ink-2', sign: '−' },
 }
 const describe = (t) => t.description || (t.payment ? `${methodLabel(t.payment.method)} top-up` : titleCase(t.type))
 const reference = (t) => t.payment?.mpesaReceiptNo || t.payment?.paymentNumber || t.payment?.bankReference || ''
@@ -73,7 +77,7 @@ const lifetimeIn = computed(() => rows.value.filter((r) => r.type === 'TOPUP').r
           <p class="text-xs text-ink-3">{{ fmtDateTime(t.createdAt) }}<template v-if="reference(t)"> · <span class="font-mono">{{ reference(t) }}</span></template></p>
         </div>
         <div class="text-right">
-          <p :class="['text-sm font-semibold tabular-nums', t.type === 'TOPUP' || t.type === 'REFUND' ? 'text-ok' : 'text-ink']">{{ (kind[t.type] ?? kind.ADJUSTMENT).sign }}{{ money(t.amount, account.currency) }}</p>
+          <p :class="['text-sm font-semibold tabular-nums', (kind[t.type] ?? kind.ADJUSTMENT).sign === '+' ? 'text-ok' : 'text-ink']">{{ (kind[t.type] ?? kind.ADJUSTMENT).sign }}{{ money(t.amount, account.currency) }}</p>
           <p class="text-xs text-ink-3 tabular-nums">Bal. {{ money(t.balanceAfter, account.currency) }}</p>
         </div>
       </li>
